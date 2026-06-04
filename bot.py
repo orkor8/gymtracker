@@ -11,7 +11,7 @@ WORKOUTS = {
         {"name": "לג פרס", "sets": 3, "reps": "12", "video": "https://www.youtube.com/watch?v=IZxyjW7MPJQ"},
         {"name": "בנץ' פרס דמבלס", "sets": 3, "reps": "10-12", "video": "https://www.youtube.com/watch?v=VmB1G1K7v94"},
         {"name": "כתפיים - Shoulder Press", "sets": 2, "reps": "12", "video": "https://www.youtube.com/watch?v=qEwKCR5JCog"},
-        {"name": "פק דק / Cable Fly", "sets": 2, "reps": "12", "video": "https://www.youtube.com/watch?v=TAOfpADMBJo"},
+        {"name": "פק דק / Cable Fly", "sets": 2, "reps": "12", "video": "https://www.youtube.com/watch?v=IODxDxX7oi4"},
         {"name": "פלאנק", "sets": 3, "reps": "30-40 שניות", "video": "https://www.youtube.com/watch?v=ASdvN_XEl_c"},
     ],
     "B": [
