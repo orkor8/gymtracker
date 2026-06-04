@@ -1,13 +1,11 @@
 import logging
 import sqlite3
+import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes, ConversationHandler
 
-# --- הגדרות ---
-import os
 TOKEN = os.environ.get("BOT_TOKEN")
 
-# --- תוכנית האימונים ---
 WORKOUTS = {
     "A": [
         {"name": "לג פרס", "sets": 3, "reps": "12", "video": "https://www.youtube.com/watch?v=IZxyjW7MPJQ"},
@@ -25,9 +23,8 @@ WORKOUTS = {
     ]
 }
 
-# --- מסד נתונים ---
 def init_db():
-    conn = sqlite3.connect("gym.db")
+    conn = sqlite3.connect("/tmp/gym.db")
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS workouts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,51 +39,43 @@ def init_db():
     conn.close()
 
 def get_last_weight(exercise):
-    conn = sqlite3.connect("gym.db")
+    conn = sqlite3.connect("/tmp/gym.db")
     c = conn.cursor()
-    c.execute('''SELECT weight, date FROM workouts 
-                 WHERE exercise = ? 
-                 ORDER BY date DESC LIMIT 1''', (exercise,))
+    c.execute('''SELECT weight, date FROM workouts WHERE exercise = ? ORDER BY date DESC LIMIT 1''', (exercise,))
     result = c.fetchone()
     conn.close()
     return result
 
 def save_exercise(date, workout_type, exercise, weight, sets, reps):
-    conn = sqlite3.connect("gym.db")
+    conn = sqlite3.connect("/tmp/gym.db")
     c = conn.cursor()
-    c.execute('''INSERT INTO workouts (date, workout_type, exercise, weight, sets, reps)
-                 VALUES (?, ?, ?, ?, ?, ?)''', (date, workout_type, exercise, weight, sets, reps))
+    c.execute('''INSERT INTO workouts (date, workout_type, exercise, weight, sets, reps) VALUES (?, ?, ?, ?, ?, ?)''',
+              (date, workout_type, exercise, weight, sets, reps))
     conn.commit()
     conn.close()
 
-# --- States לשיחה ---
-CHOOSE_WORKOUT, DO_EXERCISE, ENTER_WEIGHT = range(3)
+CHOOSE_WORKOUT, DO_EXERCISE = range(2)
 
-# --- handlers ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        [InlineKeyboardButton("💪 אימון A", callback_data="workout_A"),
-         InlineKeyboardButton("🏋️ אימון B", callback_data="workout_B")]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    keyboard = [[
+        InlineKeyboardButton("💪 אימון A", callback_data="workout_A"),
+        InlineKeyboardButton("🏋️ אימון B", callback_data="workout_B")
+    ]]
     await update.message.reply_text(
         "שלום! 👋\nבחר איזה אימון אתה עושה היום:",
-        reply_markup=reply_markup
+        reply_markup=InlineKeyboardMarkup(keyboard)
     )
     return CHOOSE_WORKOUT
 
 async def choose_workout(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    
     workout_type = query.data.split("_")[1]
     context.user_data["workout_type"] = workout_type
     context.user_data["exercise_index"] = 0
     context.user_data["exercises"] = WORKOUTS[workout_type]
-    
     from datetime import datetime
     context.user_data["date"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-    
     await query.edit_message_text(f"מעולה! מתחילים אימון {workout_type} 🔥")
     await show_exercise(update, context)
     return DO_EXERCISE
@@ -94,20 +83,12 @@ async def choose_workout(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def show_exercise(update: Update, context: ContextTypes.DEFAULT_TYPE):
     idx = context.user_data["exercise_index"]
     exercises = context.user_data["exercises"]
-    
     if idx >= len(exercises):
         await finish_workout(update, context)
         return
-    
     ex = exercises[idx]
     last = get_last_weight(ex["name"])
-    
-    last_text = ""
-    if last:
-        last_text = f"\n📊 *בפעם הקודמת:* {last[0]} ק\"ג ({last[1]})"
-    else:
-        last_text = "\n📊 *בפעם הקודמת:* אין מידע עדיין"
-    
+    last_text = f"\n📊 *בפעם הקודמת:* {last[0]} ק\"ג ({last[1]})" if last else "\n📊 *בפעם הקודמת:* אין מידע עדיין"
     text = (
         f"*תרגיל {idx+1}/{len(exercises)}*\n"
         f"🏋️ *{ex['name']}*\n"
@@ -116,14 +97,9 @@ async def show_exercise(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"[▶️ צפה בסרטון]({ex['video']})\n\n"
         f"כמה ק\"ג עשית? (הכנס מספר)"
     )
-    
     keyboard = [[InlineKeyboardButton("⏭️ דלג על תרגיל", callback_data="skip")]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    
-    if update.callback_query:
-        await update.callback_query.message.reply_text(text, parse_mode="Markdown", reply_markup=reply_markup)
-    else:
-        await update.message.reply_text(text, parse_mode="Markdown", reply_markup=reply_markup)
+    msg = update.callback_query.message if update.callback_query else update.message
+    await msg.reply_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def enter_weight(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -131,22 +107,10 @@ async def enter_weight(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except ValueError:
         await update.message.reply_text("בבקשה הכנס מספר בלבד (למשל: 50 או 22.5)")
         return DO_EXERCISE
-    
     idx = context.user_data["exercise_index"]
-    exercises = context.user_data["exercises"]
-    ex = exercises[idx]
-    
-    save_exercise(
-        context.user_data["date"],
-        context.user_data["workout_type"],
-        ex["name"],
-        weight,
-        ex["sets"],
-        ex["reps"]
-    )
-    
+    ex = context.user_data["exercises"][idx]
+    save_exercise(context.user_data["date"], context.user_data["workout_type"], ex["name"], weight, ex["sets"], ex["reps"])
     await update.message.reply_text(f"✅ נשמר! {ex['name']}: {weight} ק\"ג")
-    
     context.user_data["exercise_index"] += 1
     await show_exercise(update, context)
     return DO_EXERCISE
@@ -160,17 +124,12 @@ async def skip_exercise(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def finish_workout(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = "🎉 *כל הכבוד! סיימת את האימון!*\n\nלאימון הבא שלח /start"
-    if update.callback_query:
-        await update.callback_query.message.reply_text(text, parse_mode="Markdown")
-    else:
-        await update.message.reply_text(text, parse_mode="Markdown")
+    msg = update.callback_query.message if update.callback_query else update.message
+    await msg.reply_text(text, parse_mode="Markdown")
 
-# --- הרצה ---
 def main():
     init_db()
-    
     app = Application.builder().token(TOKEN).build()
-    
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
@@ -182,11 +141,9 @@ def main():
         },
         fallbacks=[CommandHandler("start", start)],
     )
-    
     app.add_handler(conv_handler)
-    
     print("הבוט רץ...")
-    app.run_polling()
+    app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
     main()
