@@ -4,7 +4,8 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes, ConversationHandler
 
 # --- הגדרות ---
-TOKEN = "8248106305:AAGAQHRmUqhCSjQrtGIInnN2ibjnv6Or4kw"
+import os
+TOKEN = os.environ.get("BOT_TOKEN")
 
 # --- תוכנית האימונים ---
 WORKOUTS = {
