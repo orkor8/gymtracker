@@ -8,18 +8,15 @@ TOKEN = os.environ.get("BOT_TOKEN")
 
 WORKOUTS = {
     "A": [
-        {"name": "לג פרס", "sets": 3, "reps": "12", "video": "https://www.youtube.com/watch?v=IZxyjW7MPJQ"},
-        {"name": "בנץ' פרס דמבלס", "sets": 3, "reps": "10-12", "video": "https://www.youtube.com/watch?v=VmB1G1K7v94"},
-        {"name": "כתפיים - Shoulder Press", "sets": 2, "reps": "12", "video": "https://www.youtube.com/watch?v=qEwKCR5JCog"},
-        {"name": "פק דק / Cable Fly", "sets": 2, "reps": "12", "video": "https://www.youtube.com/watch?v=IODxDxX7oi4"},
-        {"name": "פלאנק", "sets": 3, "reps": "30-40 שניות", "video": "https://www.youtube.com/watch?v=ASdvN_XEl_c"},
-    ],
-    "B": [
-        {"name": "Leg Curl", "sets": 3, "reps": "12", "video": "https://www.youtube.com/watch?v=1Tq3QdYUuHs"},
-        {"name": "Seated Row", "sets": 3, "reps": "10-12", "video": "https://www.youtube.com/watch?v=GZbfZ033f74"},
-        {"name": "Lat Pulldown", "sets": 3, "reps": "12", "video": "https://www.youtube.com/watch?v=CAwf7n6Luuc"},
-        {"name": "כפיפות מרפק - Bicep Curl", "sets": 2, "reps": "12", "video": "https://www.youtube.com/watch?v=ykJmrZ5v0Oo"},
-        {"name": "Dead Bug", "sets": 3, "reps": "8 כל צד", "video": "https://www.youtube.com/watch?v=g_BYB0R-4Ws"},
+        {"name": "חימום - הליכה מהירה / אליפטיקל", "sets": 1, "reps": "5-10 דקות", "video": "https://www.youtube.com/watch?v=__mMcqnGlGc"},
+        {"name": "לחיצת רגליים - Leg Press", "sets": 3, "reps": "10-12", "video": "https://www.youtube.com/watch?v=IZxyjW7MPJQ"},
+        {"name": "משיכת פולי עליון - Lat Pulldown", "sets": 3, "reps": "10-12", "video": "https://www.youtube.com/watch?v=CAwf7n6Luuc"},
+        {"name": "לחיצת חזה - Dumbbell Press", "sets": 3, "reps": "10-12", "video": "https://www.youtube.com/watch?v=VmB1G1K7v94"},
+        {"name": "הרמת זרועות לצדדים - Lateral Raises", "sets": 3, "reps": "12-15", "video": "https://www.youtube.com/watch?v=3VcKaXpzqRo"},
+        {"name": "כפיפת רגליים - Leg Curl", "sets": 2, "reps": "12-15", "video": "https://www.youtube.com/watch?v=1Tq3QdYUuHs"},
+        {"name": "כפיפת ברכיים - Bicep Curls", "sets": 2, "reps": "12-15", "video": "https://www.youtube.com/watch?v=ykJmrZ5v0Oo"},
+        {"name": "פשיטת מרפקים - Triceps Pushdown", "sets": 2, "reps": "12-15", "video": "https://www.youtube.com/watch?v=2-LAMcpzODU"},
+        {"name": "פלאנק", "sets": 3, "reps": "30-60 שניות", "video": "https://www.youtube.com/watch?v=ASdvN_XEl_c"},
     ]
 }
 
@@ -57,10 +54,9 @@ def save_exercise(date, workout_type, exercise, weight, sets, reps):
 CHOOSE_WORKOUT, DO_EXERCISE = range(2)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [[
-        InlineKeyboardButton("💪 אימון A", callback_data="workout_A"),
-        InlineKeyboardButton("🏋️ אימון B", callback_data="workout_B")
-    ]]
+keyboard = [[
+    InlineKeyboardButton("💪 התחל אימון", callback_data="workout_A")
+]]
     await update.message.reply_text(
         "שלום! 👋\nבחר איזה אימון אתה עושה היום:",
         reply_markup=InlineKeyboardMarkup(keyboard)
