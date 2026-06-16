@@ -1,4 +1,3 @@
-import logging
 import sqlite3
 import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -54,11 +53,11 @@ def save_exercise(date, workout_type, exercise, weight, sets, reps):
 CHOOSE_WORKOUT, DO_EXERCISE = range(2)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-keyboard = [[
-    InlineKeyboardButton("💪 התחל אימון", callback_data="workout_A")
-]]
+    keyboard = [[
+        InlineKeyboardButton("💪 התחל אימון", callback_data="workout_A")
+    ]]
     await update.message.reply_text(
-        "שלום! 👋\nבחר איזה אימון אתה עושה היום:",
+        "שלום! 👋\nמוכן לאימון?",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
     return CHOOSE_WORKOUT
@@ -72,7 +71,7 @@ async def choose_workout(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["exercises"] = WORKOUTS[workout_type]
     from datetime import datetime
     context.user_data["date"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-    await query.edit_message_text(f"מעולה! מתחילים אימון {workout_type} 🔥")
+    await query.edit_message_text(f"מעולה! מתחילים 🔥")
     await show_exercise(update, context)
     return DO_EXERCISE
 
@@ -119,9 +118,8 @@ async def skip_exercise(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return DO_EXERCISE
 
 async def finish_workout(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = "🎉 *כל הכבוד! סיימת את האימון!*\n\nלאימון הבא שלח /start"
     msg = update.callback_query.message if update.callback_query else update.message
-    await msg.reply_text(text, parse_mode="Markdown")
+    await msg.reply_text("🎉 *כל הכבוד! סיימת את האימון!*\n\nלאימון הבא שלח /start", parse_mode="Markdown")
 
 def main():
     init_db()
